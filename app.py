@@ -91,15 +91,34 @@ with tab3:
     st.header("破解迷思：借錢投資真的太貴了嗎？")
     after_tax_borrowing_cost = heloc_rate * (1 - tax_rate)
     
-    st.markdown("很多人以為借 **4.95%** 的錢，就必須找到至少配息 5% 的標的才不會虧本。這是錯的！因為 **「投資借貸的利息可以 100% 抵稅」**。")
+    st.markdown(f"很多人以為借 **{heloc_rate*100:.2f}%** 的錢，就必須找到至少配息一樣多的標的才不會虧本。這是錯的！因為在加拿大，**「為了投資而借款的利息，可以 100% 用來抵稅」**。")
+    st.markdown("讓我們把數學攤開來看，你的邊際稅率如何幫你的借貸成本「打折」：")
     
-    col_a, col_b = st.columns(2)
+    # 數學公式展示區塊
+    st.info(f"### 🧮 稅後成本公式\n**名目借貸利率 ({heloc_rate*100:.2f}%) × [ 1 - 你的邊際稅率 ({tax_rate*100:.2f}%) ] = 稅後實質成本 ({after_tax_borrowing_cost*100:.2f}%)**")
+    
+    # 具體金額情境推演
+    example_interest = 10000
+    tax_refund_amount = example_interest * tax_rate
+    net_cost = example_interest - tax_refund_amount
+    
+    st.markdown(f"""
+    **💵 用真實的金錢來舉例：**
+    假設你今年為了執行策略，總共付給銀行 **${example_interest:,.0f}** 的利息。
+    因為你的邊際稅率是 **{tax_rate*100:.2f}%**，在明年春天報稅時，CRA 會直接退還給你 **${tax_refund_amount:,.0f}** 的現金。
+    
+    一來一往相抵之下，你真正從口袋裡掏出來的淨利息成本只有 **${net_cost:,.0f}**！
+    """)
+    
+    # 比較數據卡片
+    col_a, col_b, col_c = st.columns(3)
     col_a.metric(label="表面上的借貸利率 (Nominal Rate)", value=f"{heloc_rate*100:.2f}%")
-    col_b.metric(label="真正的稅後借貸成本 (After-Tax Cost)", value=f"{after_tax_borrowing_cost*100:.2f}%", delta="因為政府幫你付了部分利息", delta_color="normal")
+    col_b.metric(label="CRA 退稅比例 (Tax Refund)", value=f"- {tax_rate*100:.2f}%")
+    col_c.metric(label="真正的稅後借貸成本 (Net Cost)", value=f"{after_tax_borrowing_cost*100:.2f}%", delta="實質成本大幅降低", delta_color="normal")
     
     st.write("---")
     st.subheader("不同投資標的的「損益平衡點 (Break-even Return)」")
-    st.markdown("如果你的實質成本只有 2.80% 左右，那這筆錢去買不同的資產，**稅前要賺多少才能剛好打平？**")
+    st.markdown("既然你的實質成本大幅降低了，那這筆錢去買不同的資產，**稅前只要賺多少，就能剛好打平？**")
     
     # 計算不同收入的稅率與損益平衡點
     cap_gain_tax_rate = tax_rate * 0.5
@@ -112,16 +131,16 @@ with tab3:
     col_x, col_y, col_z = st.columns(3)
     
     with col_x:
-        st.info("### 一般利息收入\n如 GIC 定存、債券")
+        st.info("### 1. 一般利息收入\n例如：GIC 定存、債券")
         st.metric(label="需達到的稅前報酬", value=f"{be_interest*100:.2f}%")
-        st.caption("利息收入沒有稅務優惠，所以你賺的利息必須完全等於你借款的利率才能打平。")
+        st.caption("利息收入沒有任何稅務優惠，所以你賺的利息必須完全等於你原本借款的表面利率才能打平。")
         
     with col_y:
-        st.warning("### 加拿大合格股息\n如 VDY、大型銀行股")
+        st.warning("### 2. 加拿大合格股息\n例如：VDY、大型銀行股")
         st.metric(label="需達到的稅前報酬", value=f"{be_div*100:.2f}%")
-        st.caption("因為享有 Dividend Tax Credit，你的股息只要超過這個數字，就開始賺錢了。")
+        st.caption("因為享有政府提供的 Dividend Tax Credit，你的股息只要大於這個數字，就開始淨賺錢了。")
         
     with col_z:
-        st.success("### 資本利得\n如 成長股、EIT.UN")
+        st.success("### 3. 資本利得\n例如：成長股、EIT.UN")
         st.metric(label="需達到的稅前報酬", value=f"{be_cap_gain*100:.2f}%")
-        st.caption("加拿大最高效的收入！因為只有 50% 要課稅，損益平衡門檻極低。這就是為什麼 EIT.UN 的 96% 資本利得結構如此強大。")
+        st.caption("加拿大最高效的收入！因為只有 50% 需要課稅，損益平衡門檻極低。只要回報超過這個微小的數字，剩下的都是淨利。")
