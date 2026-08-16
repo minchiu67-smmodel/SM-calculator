@@ -7,54 +7,44 @@ st.set_page_config(page_title="Smith Manoeuvre 模擬器", layout="wide")
 st.title("Smith Manoeuvre 財富加速模擬器")
 st.markdown("這是一個專為加拿大屋主設計的財務工具，展示如何透過合法的稅務優化，將無法抵稅的「壞債」轉換為能產生被動收入的「好債」。")
 
-# 側邊欄：使用者輸入參數 (全域共用)
+# 側邊欄：使用者輸入參數
 st.sidebar.header("⚙️ 請輸入你的財務數據")
 
-# --- 新增功能：邊際稅率速查器 ---
 with st.sidebar.expander("🔍 不知道自己的邊際稅率？點此估算"):
-    st.markdown("**(以安大略省綜合稅階為例)**")
-    income = st.number_input("請輸入你的預估年薪 ($)", value=110000, step=5000)
+    st.markdown("**(以安大略省 2026 綜合稅階為例)**")
+    income = st.number_input("請輸入你的預估年薪 ($)", value=115000, step=5000)
     
-# 安省 2026 最新預估邊際稅率邏輯 (聯邦+省稅+附加稅)
-    if income <= 53891:
-        est_tax = 20.05
-    elif income <= 58523:
-        est_tax = 23.15
-    elif income <= 94907:
-        est_tax = 29.65
-    elif income <= 107785:
-        est_tax = 31.48
-    elif income <= 111814:
-        est_tax = 33.89
-    elif income <= 117045:
-        est_tax = 37.91
-    elif income <= 150000:
-        est_tax = 43.91
-    elif income <= 181440:
-        est_tax = 44.97
-    elif income <= 220000:
-        est_tax = 48.26
-    elif income <= 258482:
-        est_tax = 51.97
-    else:
-        est_tax = 53.53
+    if income <= 53891: est_tax = 20.05
+    elif income <= 58523: est_tax = 23.15
+    elif income <= 94907: est_tax = 29.65
+    elif income <= 107785: est_tax = 31.48
+    elif income <= 111814: est_tax = 33.89
+    elif income <= 117045: est_tax = 37.91
+    elif income <= 150000: est_tax = 43.91
+    elif income <= 181440: est_tax = 44.97
+    elif income <= 220000: est_tax = 48.26
+    elif income <= 258482: est_tax = 51.97
+    else: est_tax = 53.53
         
     st.success(f"💡 你的邊際稅率約為：**{est_tax}%**")
     st.caption("👉 請將這個數字填入下方的「最高邊際稅率」欄位中。")
     st.write("---")
 
-# 繼續原本的參數輸入
+property_value = st.sidebar.number_input("房屋最新預估市值 ($)", value=1000000, step=50000)
 mortgage_principal = st.sidebar.number_input("目前房貸餘額 ($)", value=590000, step=10000)
 mortgage_rate = st.sidebar.number_input("傳統房貸利率 (%)", value=4.99, step=0.1) / 100
+amortization_years = st.sidebar.number_input("剩餘貸款年數 (Amortization)", value=25, step=1)
 heloc_rate = st.sidebar.number_input("HELOC 借貸利率 (%)", value=4.95, step=0.1) / 100
-tax_rate = st.sidebar.number_input("你的最高邊際稅率 (%)", value=43.41, step=0.1) / 100
+tax_rate = st.sidebar.number_input("你的最高邊際稅率 (%)", value=37.91, step=0.1) / 100
 investment_yield = st.sidebar.number_input("預期投資回報率 (%)", value=6.72, step=0.1) / 100
-monthly_payment = st.sidebar.number_input("每月預計繳納本金 ($)", value=1500, step=100)
+
+# 計算 OSFI 65% 天花板
+heloc_limit = property_value * 0.65
 
 # 建立三個分頁
-tab1, tab2, tab3 = st.tabs(["🔄 模組一：飛輪概念圖解", "📊 模組二：專屬數據沙盒", "🛡️ 模組三：稅務透視鏡"])
+tab1, tab2, tab3 = st.tabs(["🔄 模組一：飛輪概念圖解", "🛡️ 模組二：稅務透視鏡", "📊 模組三：專屬數據沙盒"])
 
-# --- 模組一 ---
+# --- 模組一：飛輪概念 ---
 with tab1:
     st.header("什麼是 Smith Manoeuvre？ (資金飛輪)")
     st.markdown("這個策略的核心，就是讓同一筆錢為你做兩件事：**同時消滅房貸，又同時累積資產。** 讓我們用 5 個簡單的步驟來看看它是如何運作的：")
@@ -69,113 +59,131 @@ with tab1:
     st.markdown("<h2 style='text-align: center;'>🔄 飛輪自動扣板機 🔄</h2>", unsafe_allow_html=True)
     st.info("### 步驟 5：加速砸向房貸 🚀\n你把賺到的「股息」和「退稅」，全部再次拿去還傳統房貸（回到步驟 1）。\n\n**這就是 Aha Moment 💡：** 下個月你的本金降得更快 ➡️ 釋放的額度更多 ➡️ 買的資產更多 ➡️ 領的股息更多！原本要 25 年的房貸，就這樣被暴風式地縮短了。")
 
-# --- 模組二 ---
+# --- 模組二：稅務透視鏡 ---
 with tab2:
-    st.header("輸入你的數據，看看真實的加速效果")
+    st.header("破解迷思：借錢投資真的太貴了嗎？")
     after_tax_borrowing_cost = heloc_rate * (1 - tax_rate)
+    st.markdown(f"很多人以為借 **{heloc_rate*100:.2f}%** 的錢，就必須找到至少配息一樣多的標的才不會虧本。這是錯的！因為在加拿大，**「為了投資而借款的利息，可以 100% 用來抵稅」**。")
+    st.info(f"### 🧮 稅後成本公式\n**名目借貸利率 ({heloc_rate*100:.2f}%) × [ 1 - 你的邊際稅率 ({tax_rate*100:.2f}%) ] = 稅後實質成本 ({after_tax_borrowing_cost*100:.2f}%)**")
+    
+    col_a, col_b, col_c = st.columns(3)
+    col_a.metric(label="表面借貸利率 (Nominal Rate)", value=f"{heloc_rate*100:.2f}%")
+    col_b.metric(label="CRA 退稅比例 (Tax Refund)", value=f"- {tax_rate*100:.2f}%")
+    col_c.metric(label="真正稅後成本 (Net Cost)", value=f"{after_tax_borrowing_cost*100:.2f}%", delta="實質成本大幅降低", delta_color="normal")
+    
+    st.write("---")
+    st.subheader("必懂觀念：三種投資收入的稅務差異")
+    col_x, col_y, col_z = st.columns(3)
+    be_interest = after_tax_borrowing_cost / (1 - tax_rate)
+    be_div = after_tax_borrowing_cost / (1 - (tax_rate * 0.6)) 
+    be_cap_gain = after_tax_borrowing_cost / (1 - (tax_rate * 0.5))
+    
+    with col_x:
+        st.error("### 1. 一般利息 (Interest)\n例如：GIC 定存、債券")
+        st.markdown("**稅務重災區：** 賺到的每一塊錢都要 **100%** 併入年薪，用最高稅率課稅。")
+        st.metric(label="不虧本需達到的稅前報酬", value=f"{be_interest*100:.2f}%")
+        
+    with col_y:
+        st.warning("### 2. 合格股息 (Eligible Dividend)\n例如：五大銀行股、VDY")
+        st.markdown("**中等優惠：** 政府提供「股息稅務抵免」，實質稅率通常只有一般利息的一半。")
+        st.metric(label="不虧本需達到的稅前報酬", value=f"{be_div*100:.2f}%")
+        
+    with col_z:
+        st.success("### 3. 資本利得 (Capital Gains)\n例如：成長型 ETF、EIT.UN")
+        st.markdown("**終極加速器：** 加拿大稅法最大禮物！賺到的錢只有 **50%** 需要課稅。")
+        st.metric(label="不虧本需達到的稅前報酬", value=f"{be_cap_gain*100:.2f}%")
 
-    years = 20
-    data = []
+# --- 模組三：真實數據沙盒 ---
+with tab3:
+    st.header("專屬數據沙盒：真實的本息攤還加速引擎")
+    
+    st.info(f"### 🏛️ 什麼是 OSFI 65% 天花板限制？\n加拿大金融糾察隊 (OSFI) 規定，任何房屋的理財型房貸 (HELOC) 借款總額，**絕對不能超過房屋最新市值的 65%**。\n* 以你的房屋估價 ${property_value:,.0f} 為例，你的 HELOC 借款上限就是 **${heloc_limit:,.0f}**。\n* **破關時刻：** 當你的橘色好債碰到這條天花板時，代表你能轉換的債務已經達到法規極限，這稱為「完全資本化 (Fully Capitalized)」。")
+    
+    # 真實本息攤還計算 (加入 OSFI 65% 限制)
+    monthly_mortgage_rate = mortgage_rate / 12
+    n_months = int(amortization_years * 12)
+    
+    if monthly_mortgage_rate > 0 and n_months > 0:
+        pmt = mortgage_principal * (monthly_mortgage_rate * (1 + monthly_mortgage_rate)**n_months) / ((1 + monthly_mortgage_rate)**n_months - 1)
+    else:
+        pmt = 0
+
     current_mortgage = mortgage_principal
     current_invested = 0
+    data = []
 
-    for year in range(1, years + 1):
+    for year in range(1, int(amortization_years) + 1):
+        for month in range(12):
+            if current_mortgage > 0:
+                interest_portion = current_mortgage * monthly_mortgage_rate
+                principal_portion = pmt - interest_portion
+                
+                if principal_portion > current_mortgage:
+                    principal_portion = current_mortgage
+                    
+                current_mortgage -= principal_portion
+                
+                # 計算還有多少 HELOC 額度可以借 (OSFI 65% 限制)
+                available_heloc = heloc_limit - current_invested
+                borrow_amount = min(principal_portion, available_heloc)
+                if borrow_amount > 0:
+                    current_invested += borrow_amount
+                
+                # 每月配息砸向房貸，並再次釋放額度
+                monthly_dividend = current_invested * (investment_yield / 12)
+                current_mortgage -= monthly_dividend
+                
+                available_heloc_2 = heloc_limit - current_invested
+                borrow_amount_2 = min(monthly_dividend, available_heloc_2)
+                if borrow_amount_2 > 0:
+                    current_invested += borrow_amount_2
+                
+        # 每年底退稅砸向房貸
         if current_mortgage > 0:
-            yearly_principal_paid = monthly_payment * 12
-            annual_dividend = current_invested * investment_yield
             annual_tax_refund = (current_invested * heloc_rate) * tax_rate
-            total_prepayment = yearly_principal_paid + annual_dividend + annual_tax_refund
+            current_mortgage -= annual_tax_refund
             
-            current_mortgage -= total_prepayment
+            available_heloc_3 = heloc_limit - current_invested
+            borrow_amount_3 = min(annual_tax_refund, available_heloc_3)
+            if borrow_amount_3 > 0:
+                current_invested += borrow_amount_3
+                
             if current_mortgage < 0:
                 current_mortgage = 0
                 
-            current_invested += total_prepayment
-            
         data.append({
             "Year": year,
             "傳統房貸 (壞債)": max(0, current_mortgage),
             "投資組合價值 (資產)": current_invested,
             "HELOC 餘額 (好債)": current_invested
         })
+        
+        if current_mortgage == 0 and current_invested >= heloc_limit:
+            # 壞債歸零且好債滿額，提早結束圖表繪製
+            break
 
     df = pd.DataFrame(data)
 
     col1, col2, col3 = st.columns(3)
-    col1.metric("稅後實質借錢成本", f"{after_tax_borrowing_cost*100:.2f}%", "享有稅務抵扣")
-    col2.metric("投資與借錢的淨利差", f"{(investment_yield - after_tax_borrowing_cost)*100:.2f}%", "正向套利空間")
-
+    col1.metric("每月例行房貸繳款", f"${pmt:,.0f}", "由系統自動精算")
+    
     payoff_year = df[df["傳統房貸 (壞債)"] == 0]["Year"].min()
     if pd.isna(payoff_year):
-        col3.metric("預計壞債結清時間", "> 20 年")
+        col2.metric("預計壞債結清時間", f"{int(amortization_years)} 年 (無變化)")
     else:
-        col3.metric("預計壞債結清時間", f"第 {int(payoff_year)} 年", "大幅縮短還款期")
+        col2.metric("預計壞債結清時間", f"第 {int(payoff_year)} 年", f"提早還清壞債！")
+        
+    final_portfolio = df["投資組合價值 (資產)"].iloc[-1]
+    col3.metric("結清時擁有的投資組合", f"${final_portfolio:,.0f}", "全數為抵稅好債")
 
-    st.subheader("未來 20 年財富軌跡投影")
+    st.subheader(f"未來財富軌跡投影 (OSFI 上限：${heloc_limit:,.0f})")
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=df["Year"], y=df["傳統房貸 (壞債)"], mode='lines+markers', name='傳統房貸 (壞債)', line=dict(color='red')))
     fig.add_trace(go.Scatter(x=df["Year"], y=df["投資組合價值 (資產)"], mode='lines+markers', name='投資組合價值 (資產)', line=dict(color='green')))
     fig.add_trace(go.Scatter(x=df["Year"], y=df["HELOC 餘額 (好債)"], mode='lines', name='HELOC 餘額 (抵稅好債)', line=dict(color='orange', dash='dash')))
+    
+    # 畫上 OSFI 65% 天花板的水平虛線
+    fig.add_hline(y=heloc_limit, line_dash="dot", line_color="purple", annotation_text="OSFI 65% 借款天花板 (完全資本化)", annotation_position="top left")
 
     fig.update_layout(xaxis_title="執行年度", yaxis_title="金額 (加幣 $)", hovermode="x unified", margin=dict(l=0, r=0, t=30, b=0))
     st.plotly_chart(fig, use_container_width=True)
-    st.info("📌 這個圖表假設所有投資收益與年度退稅，都 100% 再次投入償還傳統房貸，以達到最大的飛輪加速效果。")
-
-# --- 模組三 ---
-with tab3:
-    st.header("破解迷思：借錢投資真的太貴了嗎？")
-    after_tax_borrowing_cost = heloc_rate * (1 - tax_rate)
-    
-    st.markdown(f"很多人以為借 **{heloc_rate*100:.2f}%** 的錢，就必須找到至少配息一樣多的標的才不會虧本。這是錯的！因為在加拿大，**「為了投資而借款的利息，可以 100% 用來抵稅」**。")
-    st.markdown("讓我們把數學攤開來看，你的邊際稅率如何幫你的借貸成本「打折」：")
-    
-    # 數學公式展示區塊
-    st.info(f"### 🧮 稅後成本公式\n**名目借貸利率 ({heloc_rate*100:.2f}%) × [ 1 - 你的邊際稅率 ({tax_rate*100:.2f}%) ] = 稅後實質成本 ({after_tax_borrowing_cost*100:.2f}%)**")
-    
-    # 具體金額情境推演
-    example_interest = 10000
-    tax_refund_amount = example_interest * tax_rate
-    net_cost = example_interest - tax_refund_amount
-    
-    st.markdown(f"""
-    **💵 用真實的金錢來舉例：**
-    假設你今年為了執行策略，總共付給銀行 **${example_interest:,.0f}** 的利息。
-    因為你的邊際稅率是 **{tax_rate*100:.2f}%**，在明年春天報稅時，CRA 會直接退還給你 **${tax_refund_amount:,.0f}** 的現金。
-    
-    一來一往相抵之下，你真正從口袋裡掏出來的淨利息成本只有 **${net_cost:,.0f}**！
-    """)
-    
-    # 比較數據卡片
-    col_a, col_b, col_c = st.columns(3)
-    col_a.metric(label="表面上的借貸利率 (Nominal Rate)", value=f"{heloc_rate*100:.2f}%")
-    col_b.metric(label="CRA 退稅比例 (Tax Refund)", value=f"- {tax_rate*100:.2f}%")
-    col_c.metric(label="真正的稅後借貸成本 (Net Cost)", value=f"{after_tax_borrowing_cost*100:.2f}%", delta="實質成本大幅降低", delta_color="normal")
-    
-    st.write("---")
-    st.subheader("不同投資標的的「損益平衡點 (Break-even Return)」")
-    st.markdown("既然你的實質成本大幅降低了，那這筆錢去買不同的資產，**稅前只要賺多少，就能剛好打平？**")
-    
-    # 計算不同收入的稅率與損益平衡點
-    cap_gain_tax_rate = tax_rate * 0.5
-    eligible_div_tax_rate = tax_rate * 0.6 # 簡化的稅務抵免估值
-    
-    be_interest = after_tax_borrowing_cost / (1 - tax_rate)
-    be_cap_gain = after_tax_borrowing_cost / (1 - cap_gain_tax_rate)
-    be_div = after_tax_borrowing_cost / (1 - eligible_div_tax_rate)
-    
-    col_x, col_y, col_z = st.columns(3)
-    
-    with col_x:
-        st.info("### 1. 一般利息收入\n例如：GIC 定存、債券")
-        st.metric(label="需達到的稅前報酬", value=f"{be_interest*100:.2f}%")
-        st.caption("利息收入沒有任何稅務優惠，所以你賺的利息必須完全等於你原本借款的表面利率才能打平。")
-        
-    with col_y:
-        st.warning("### 2. 加拿大合格股息\n例如：VDY、大型銀行股")
-        st.metric(label="需達到的稅前報酬", value=f"{be_div*100:.2f}%")
-        st.caption("因為享有政府提供的 Dividend Tax Credit，你的股息只要大於這個數字，就開始淨賺錢了。")
-        
-    with col_z:
-        st.success("### 3. 資本利得\n例如：成長股、EIT.UN")
-        st.metric(label="需達到的稅前報酬", value=f"{be_cap_gain*100:.2f}%")
-        st.caption("加拿大最高效的收入！因為只有 50% 需要課稅，損益平衡門檻極低。只要回報超過這個微小的數字，剩下的都是淨利。")
