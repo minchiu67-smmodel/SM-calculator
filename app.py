@@ -19,40 +19,29 @@ monthly_payment = st.sidebar.number_input("每月預計繳納本金 ($)", value=
 tab1, tab2 = st.tabs(["🔄 模組一：飛輪概念圖解", "📊 模組二：專屬數據沙盒"])
 
 with tab1:
-    st.header("什麼是 Smith Manoeuvre？ (資金迴圈)")
-    st.markdown("""
-    這個策略的核心，就是讓同一筆錢為你做兩件事：**同時消滅房貸，又同時累積資產。**
-    下方的「資金水流圖 (Sankey Diagram)」展示了這個自動化的飛輪是如何運轉的：
-    """)
+    st.header("什麼是 Smith Manoeuvre？ (資金飛輪)")
+    st.markdown("這個策略的核心，就是讓同一筆錢為你做兩件事：**同時消滅房貸，又同時累積資產。** 讓我們用 5 個簡單的步驟來看看它是如何運作的：")
     
-    # 建立 Sankey Diagram
-    fig_sankey = go.Figure(data=[go.Sankey(
-        node = dict(
-          pad = 30,
-          thickness = 20,
-          line = dict(color = "black", width = 0.5),
-          label = [
-              "1. 薪水 (日常現金流)", 
-              "2. 傳統房貸 (還本金消滅壞債)", 
-              "3. 銀行 HELOC (額度自動釋放)", 
-              "4. 投資帳戶 (買入高息資產)", 
-              "5. 股息與退稅 (創造新現金流)", 
-              "6. 加速砸向房貸 (飛輪啟動！)"
-          ],
-          color = ["#2CA02C", "#D62728", "#1F77B4", "#FF7F0E", "#9467BD", "#D62728"]
-        ),
-        link = dict(
-          source = [0, 1, 2, 3, 4], # 節點起點
-          target = [1, 2, 3, 4, 5], # 節點終點
-          value = [100, 100, 100, 40, 40], # 水管粗細比例
-          label = ["每月例行繳款", "1:1 自動連動", "借出投資", "產生被動收入", "再次還本金"]
-        )
-    )])
+    st.write("---")
     
-    fig_sankey.update_layout(height=450, font_size=14, margin=dict(l=0, r=0, t=20, b=20))
-    st.plotly_chart(fig_sankey, use_container_width=True)
+    # 使用 Streamlit 內建的提示框來製作俐落的步驟卡片
+    st.info("### 步驟 1：日常繳款 ➡️ 房貸本金減少\n每個月你用日常薪水繳交傳統房貸。只要「本金」減少了，銀行的連動系統就會立刻啟動。")
     
-    st.success("💡 **Aha Moment (頓悟時刻):** 注意看最後一條紫色的水管！以前你的房貸只能靠薪水苦苦地還（最左邊綠色水管）；啟動 SM 後，你多了一支由「投資收益」與「稅務局退稅」組成的軍隊，每個月都在幫你一起消滅房貸。這就是它能將 25 年貸款暴縮的秘密。")
+    st.markdown("<h2 style='text-align: center;'>⬇️</h2>", unsafe_allow_html=True)
+    
+    st.warning("### 步驟 2：銀行釋放額度 🔓 (Readvanceable)\n你的傳統房貸每還掉 $1,000 的本金，旁邊的 HELOC (理財型房貸) 抽屜就會自動多出 $1,000 的可用借款額度。")
+    
+    st.markdown("<h2 style='text-align: center;'>⬇️</h2>", unsafe_allow_html=True)
+    
+    st.success("### 步驟 3：借出額度 ➡️ 買入高息資產 📈\n你把這 $1,000 借出來放進投資帳戶，買入能穩定配息的資產。\n*(💡 此時你的總負債沒有增加，你只是把「不能抵稅的壞債」，轉換成了「能幫你賺錢的好債」)*")
+    
+    st.markdown("<h2 style='text-align: center;'>⬇️</h2>", unsafe_allow_html=True)
+    
+    st.error("### 步驟 4：收取股息 ＋ 獲取退稅 💰\n這些資產每個月會發放「股息」給你；到了隔年春天報稅時，因為這筆借款是用來投資的，加拿大稅務局 (CRA) 還會退回一筆「利息抵稅」的現金給你。")
+    
+    st.markdown("<h2 style='text-align: center;'>🔄 飛輪自動扣板機 🔄</h2>", unsafe_allow_html=True)
+    
+    st.info("### 步驟 5：加速砸向房貸 🚀\n你把賺到的「股息」和「退稅」，全部再次拿去還傳統房貸（回到步驟 1）。\n\n**這就是 Aha Moment 💡：** 下個月你的本金降得更快 ➡️ 釋放的額度更多 ➡️ 買的資產更多 ➡️ 領的股息更多！原本要 25 年的房貸，就這樣被暴風式地縮短了。")
 
 with tab2:
     st.header("輸入你的數據，看看真實的加速效果")
