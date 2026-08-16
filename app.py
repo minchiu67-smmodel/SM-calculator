@@ -9,6 +9,39 @@ st.markdown("這是一個專為加拿大屋主設計的財務工具，展示如�
 
 # 側邊欄：使用者輸入參數 (全域共用)
 st.sidebar.header("⚙️ 請輸入你的財務數據")
+
+# --- 新增功能：邊際稅率速查器 ---
+with st.sidebar.expander("🔍 不知道自己的邊際稅率？點此估算"):
+    st.markdown("**(以安大略省綜合稅階為例)**")
+    income = st.number_input("請輸入你的預估年薪 ($)", value=110000, step=5000)
+    
+    # 安省 2024/2025 預估邊際稅率邏輯 (聯邦+省稅)
+    if income <= 51446:
+        est_tax = 20.05
+    elif income <= 55867:
+        est_tax = 24.15
+    elif income <= 90563:
+        est_tax = 29.65
+    elif income <= 102894:
+        est_tax = 31.48
+    elif income <= 111733:
+        est_tax = 33.89
+    elif income <= 150000:
+        est_tax = 43.41
+    elif income <= 173205:
+        est_tax = 44.97
+    elif income <= 235675:
+        est_tax = 48.29
+    elif income <= 246752:
+        est_tax = 51.97
+    else:
+        est_tax = 53.53
+        
+    st.success(f"💡 你的邊際稅率約為：**{est_tax}%**")
+    st.caption("👉 請將這個數字填入下方的「最高邊際稅率」欄位中。")
+    st.write("---")
+
+# 繼續原本的參數輸入
 mortgage_principal = st.sidebar.number_input("目前房貸餘額 ($)", value=590000, step=10000)
 mortgage_rate = st.sidebar.number_input("傳統房貸利率 (%)", value=4.99, step=0.1) / 100
 heloc_rate = st.sidebar.number_input("HELOC 借貸利率 (%)", value=4.95, step=0.1) / 100
