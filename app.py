@@ -15,24 +15,26 @@ with st.sidebar.expander("🔍 不知道自己的邊際稅率？點此估算"):
     st.markdown("**(以安大略省綜合稅階為例)**")
     income = st.number_input("請輸入你的預估年薪 ($)", value=110000, step=5000)
     
-    # 安省 2024/2025 預估邊際稅率邏輯 (聯邦+省稅)
-    if income <= 51446:
+# 安省 2026 最新預估邊際稅率邏輯 (聯邦+省稅+附加稅)
+    if income <= 53891:
         est_tax = 20.05
-    elif income <= 55867:
-        est_tax = 24.15
-    elif income <= 90563:
+    elif income <= 58523:
+        est_tax = 23.15
+    elif income <= 94907:
         est_tax = 29.65
-    elif income <= 102894:
+    elif income <= 107785:
         est_tax = 31.48
-    elif income <= 111733:
+    elif income <= 111814:
         est_tax = 33.89
+    elif income <= 117045:
+        est_tax = 37.91
     elif income <= 150000:
-        est_tax = 43.41
-    elif income <= 173205:
+        est_tax = 43.91
+    elif income <= 181440:
         est_tax = 44.97
-    elif income <= 235675:
-        est_tax = 48.29
-    elif income <= 246752:
+    elif income <= 220000:
+        est_tax = 48.26
+    elif income <= 258482:
         est_tax = 51.97
     else:
         est_tax = 53.53
