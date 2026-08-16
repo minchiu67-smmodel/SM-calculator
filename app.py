@@ -38,11 +38,10 @@ heloc_rate = st.sidebar.number_input("HELOC 借貸利率 (%)", value=4.95, step=
 tax_rate = st.sidebar.number_input("你的最高邊際稅率 (%)", value=37.91, step=0.1) / 100
 investment_yield = st.sidebar.number_input("預期投資回報率 (%)", value=6.72, step=0.1) / 100
 
-# 計算 OSFI 65% 天花板
 heloc_limit = property_value * 0.65
 
-# 建立三個分頁
-tab1, tab2, tab3 = st.tabs(["🔄 模組一：飛輪概念圖解", "🛡️ 模組二：稅務透視鏡", "📊 模組三：專屬數據沙盒"])
+# 建立四個分頁
+tab1, tab2, tab3, tab4 = st.tabs(["🔄 模組一：飛輪概念圖解", "🛡️ 模組二：稅務透視鏡", "📊 模組三：專屬數據沙盒", "⚠️ 模組四：風險與執行須知"])
 
 # --- 模組一：飛輪概念 ---
 with tab1:
@@ -96,17 +95,11 @@ with tab2:
 # --- 模組三：真實數據沙盒 ---
 with tab3:
     st.header("專屬數據沙盒：真實的本息攤還加速引擎")
+    st.info(f"### 🏛️ 什麼是 OSFI 65% 天花板限制？\n加拿大金融糾察隊 (OSFI) 規定，任何房屋的理財型房貸 (HELOC) 借款總額，**絕對不能超過房屋最新市值的 65%**。\n* 以你的房屋估價 ${property_value:,.0f} 為例，你的 HELOC 借款上限就是 **${heloc_limit:,.0f}**。\n* **破關時刻：** 當你的橘色好債碰到這條天花板時，代表你能轉換的債務已經達到法規極限，這稱為「完全資本化」。")
     
-    st.info(f"### 🏛️ 什麼是 OSFI 65% 天花板限制？\n加拿大金融糾察隊 (OSFI) 規定，任何房屋的理財型房貸 (HELOC) 借款總額，**絕對不能超過房屋最新市值的 65%**。\n* 以你的房屋估價 ${property_value:,.0f} 為例，你的 HELOC 借款上限就是 **${heloc_limit:,.0f}**。\n* **破關時刻：** 當你的橘色好債碰到這條天花板時，代表你能轉換的債務已經達到法規極限，這稱為「完全資本化 (Fully Capitalized)」。")
-    
-    # 真實本息攤還計算 (加入 OSFI 65% 限制)
     monthly_mortgage_rate = mortgage_rate / 12
     n_months = int(amortization_years * 12)
-    
-    if monthly_mortgage_rate > 0 and n_months > 0:
-        pmt = mortgage_principal * (monthly_mortgage_rate * (1 + monthly_mortgage_rate)**n_months) / ((1 + monthly_mortgage_rate)**n_months - 1)
-    else:
-        pmt = 0
+    pmt = mortgage_principal * (monthly_mortgage_rate * (1 + monthly_mortgage_rate)**n_months) / ((1 + monthly_mortgage_rate)**n_months - 1) if monthly_mortgage_rate > 0 and n_months > 0 else 0
 
     current_mortgage = mortgage_principal
     current_invested = 0
@@ -117,39 +110,28 @@ with tab3:
             if current_mortgage > 0:
                 interest_portion = current_mortgage * monthly_mortgage_rate
                 principal_portion = pmt - interest_portion
-                
-                if principal_portion > current_mortgage:
-                    principal_portion = current_mortgage
-                    
+                if principal_portion > current_mortgage: principal_portion = current_mortgage
                 current_mortgage -= principal_portion
                 
-                # 計算還有多少 HELOC 額度可以借 (OSFI 65% 限制)
                 available_heloc = heloc_limit - current_invested
                 borrow_amount = min(principal_portion, available_heloc)
-                if borrow_amount > 0:
-                    current_invested += borrow_amount
+                if borrow_amount > 0: current_invested += borrow_amount
                 
-                # 每月配息砸向房貸，並再次釋放額度
                 monthly_dividend = current_invested * (investment_yield / 12)
                 current_mortgage -= monthly_dividend
                 
                 available_heloc_2 = heloc_limit - current_invested
                 borrow_amount_2 = min(monthly_dividend, available_heloc_2)
-                if borrow_amount_2 > 0:
-                    current_invested += borrow_amount_2
+                if borrow_amount_2 > 0: current_invested += borrow_amount_2
                 
-        # 每年底退稅砸向房貸
         if current_mortgage > 0:
             annual_tax_refund = (current_invested * heloc_rate) * tax_rate
             current_mortgage -= annual_tax_refund
             
             available_heloc_3 = heloc_limit - current_invested
             borrow_amount_3 = min(annual_tax_refund, available_heloc_3)
-            if borrow_amount_3 > 0:
-                current_invested += borrow_amount_3
-                
-            if current_mortgage < 0:
-                current_mortgage = 0
+            if borrow_amount_3 > 0: current_invested += borrow_amount_3
+            if current_mortgage < 0: current_mortgage = 0
                 
         data.append({
             "Year": year,
@@ -157,10 +139,7 @@ with tab3:
             "投資組合價值 (資產)": current_invested,
             "HELOC 餘額 (好債)": current_invested
         })
-        
-        if current_mortgage == 0 and current_invested >= heloc_limit:
-            # 壞債歸零且好債滿額，提早結束圖表繪製
-            break
+        if current_mortgage == 0 and current_invested >= heloc_limit: break
 
     df = pd.DataFrame(data)
 
@@ -181,9 +160,22 @@ with tab3:
     fig.add_trace(go.Scatter(x=df["Year"], y=df["傳統房貸 (壞債)"], mode='lines+markers', name='傳統房貸 (壞債)', line=dict(color='red')))
     fig.add_trace(go.Scatter(x=df["Year"], y=df["投資組合價值 (資產)"], mode='lines+markers', name='投資組合價值 (資產)', line=dict(color='green')))
     fig.add_trace(go.Scatter(x=df["Year"], y=df["HELOC 餘額 (好債)"], mode='lines', name='HELOC 餘額 (抵稅好債)', line=dict(color='orange', dash='dash')))
-    
-    # 畫上 OSFI 65% 天花板的水平虛線
-    fig.add_hline(y=heloc_limit, line_dash="dot", line_color="purple", annotation_text="OSFI 65% 借款天花板 (完全資本化)", annotation_position="top left")
-
+    fig.add_hline(y=heloc_limit, line_dash="dot", line_color="purple", annotation_text="OSFI 65% 借款天花板", annotation_position="top left")
     fig.update_layout(xaxis_title="執行年度", yaxis_title="金額 (加幣 $)", hovermode="x unified", margin=dict(l=0, r=0, t=30, b=0))
     st.plotly_chart(fig, use_container_width=True)
+
+# --- 模組四：風險與執行須知 (全新加入) ---
+with tab4:
+    st.error("### 🛑 免責聲明 (Disclaimer)\n**本網頁工具僅供教育與數學概念展示之用，絕非專業的財務或投資建議。**\n開發者並非持牌財務顧問或會計師，無法為您的投資結果承擔風險。Smith Manoeuvre 涉及複雜的稅務法規與高槓桿操作，強烈建議在實際執行前，**務必諮詢您的專屬會計師 (CPA) 或理財顧問！**")
+    
+    st.header("執行此策略的 4 個致命鐵則")
+    st.markdown("如果決定要啟動這個飛輪，請務必嚴格遵守以下規則，否則可能會面臨 CRA 的稅務懲罰或財務危機：")
+    st.write("---")
+    
+    st.info("### 1. 資金軌跡必須「絕對乾淨」 (Clean Paper Trail)\n加拿大稅務局 (CRA) 對利息抵稅的查帳非常嚴格。從 HELOC 借出來的錢必須**「直接」**轉入你的投資帳戶。絕對不能先轉到你的日常支票帳戶，更不能用來買菜、繳卡費或旅遊。**只要混入了一分錢的私人消費，整個帳戶的抵稅資格就會被污染 (Contaminated)！**")
+    
+    st.warning("### 2. 必須開設全新的「專屬非註冊帳戶」 (Non-Registered Account)\n這筆錢**絕對不能**放進 TFSA 或 RRSP！因為在加拿大稅法中，為了免稅帳戶所借的貸款，其利息是不能抵稅的。你必須在券商（如 Wealthsimple, Questrade 或銀行）開立一個全新的、專門只為了這個策略運作的非註冊帳戶，並確保不與你原有的其他股票混在一起。")
+    
+    st.success("### 3. 極度自律的現金流管理\n當銀行系統自動釋放了幾十萬的額度給你時，看著那麼大筆的可用資金，很容易產生「先借一點去付頭期款或買車」的衝動。這個策略的成功建立在 100% 的紀律上：**釋放的額度只能買資產，產生的股息只能拿去還房貸。**")
+    
+    st.error("### 4. 承受市場與利率的雙重波動 (Volatility Risk)\n這本質上就是「槓桿投資 (Leverage)」。HELOC 的利率是浮動的（跟著 Prime Rate 走），而股票或 ETF 的價格也會上下波動。如果遇到股市大跌且央行大幅升息的極端情況，你必須要有足夠的心理素質與穩定的日常薪水現金流，來安穩度過帳面虧損的週期。")
